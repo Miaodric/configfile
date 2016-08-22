@@ -1,0 +1,7 @@
+1. gnome-terminal
+ 
+gconftool-2 --dump '/apps/gnome-terminal'> gnome-terminal-conf.xml
+
+Then on the other machines, run
+
+gconftool-2 --load gnome-terminal-conf.xml 
