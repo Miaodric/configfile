@@ -44,6 +44,7 @@ filetype plugin indent on     " required!
 Bundle 'lookupfile'
 Bundle 'genutils'
 Bundle 'xml.vim'
+Bundle 'indentpython.vim'
 "http://www.cnblogs.com/fstang/archive/2012/12/05/2803964.html
 "snipMate用于补全很多模式
 "这个插件只用了一个键，就是TAB键，比如对一个C/C++文件，输入inc，再按TAB键，就会填充为#include
@@ -52,7 +53,8 @@ Bundle 'xml.vim'
 "snippets已经被UltiSnips代替
 "Bundle 'snipMate'
 Bundle 'a.vim'
-Bundle 'minibufexpl.vim'
+"Bundle 'minibufexpl.vim'
+Bundle 'fholgado/minibufexpl.vim'
 Bundle 'Mark'
 Bundle 'echofunc.vim'
 Bundle 'Visual-Mark'
@@ -93,6 +95,7 @@ Bundle 'tmhedberg/SimpylFold'
 "Javascript highlight
 Bundle 'pangloss/vim-javascript'
 Bundle 'gregsexton/MatchTag'
+Bundle 'davidhalter/jedi-vim'
 "Bundle 'fishman/ctags'
 "Bundle 'tpope/vim-fugitive'
 "Bundle 'Lokaltog/vim-easymotion'
@@ -633,8 +636,16 @@ let g:miniBufExplModSelTarget = 1
 let g:miniBufExplorerMoreThanOne = 0
 let g:miniBufExplUseSingleClick = 1
 let g:miniBufExplMapWindowNavVim = 1
-let g:miniBufExplVSplit = 25
-let g:miniBufExplSplitBelow=1
+let g:miniBufExplSplit = 1
+"let g:miniBufExplSplitBelow=1
+
+let g:miniBufExplMapWindowNavArrows = 1  
+let g:miniBufExplMapCTabSwitchWindows = 1  
+  
+"解决FileExplorer窗口变小问题  
+let g:miniBufExplForceSyntaxEnable = 1  
+set noequalalways
+"let g:miniBufExplorerMoreThanOne=2
 
 "WindowZ
 "I prefer WM
@@ -819,6 +830,14 @@ ia <buffer> #i #include
 ia <buffer> #d #define
 endfunction
 
+"Miao Pre-defined functions for specific files
+func! DeleteTrailingWS()
+  exe "normal mz"
+  %s/\s\+$//ge
+  exe "normal `z"
+endfunc
+"<------Miao Pre-defined functions for specific files
+
 fun! Abbrev_java()
 ia <buffer> #i import
 ia <buffer> #p System.out.println
@@ -829,6 +848,9 @@ fun! Abbrev_python()
 ia <buffer> #i import
 ia <buffer> #p print
 ia <buffer> #m if __name__=="__main":
+"Remove trailing white spaces when saving a python file:
+autocmd BufWrite *.py :call DeleteTrailingWS()
+"noremap <leader>w :call DeleteTrailingWS()<CR>
 
 "flake8
 autocmd FileType python map <buffer> <leader><F3> :call Flake8()<CR>
@@ -1426,4 +1448,30 @@ au BufNewFile,BufRead *.xml,*.htm,*.html so ~/.vim/bundle/XML-Folding/plugin/XML
 
 "let g:pyclewn_terminal = "xterm, -e"
 set colorcolumn=80
+
+" jedi
+"https://github.com/Valloric/YouCompleteMe/issues/234
+let g:jedi#auto_initialization = 1
+let g:jedi#completions_enabled = 0
+let g:jedi#auto_vim_configuration = 0
+let g:jedi#smart_auto_mappings = 0
+let g:jedi#popup_on_dot = 0
+let g:jedi#completions_command = ""
+let g:jedi#show_call_signatures = "1"
+let g:jedi#show_call_signatures_delay = 0
+
+au FileType qf call AdjustWindowHeight(3, 10)
+function! AdjustWindowHeight(minheight, maxheight)
+    let l = 1
+    let n_lines = 0
+    let w_width = winwidth(0)
+    while l <= line('$')
+        " number to float for division
+        let l_len = strlen(getline(l)) + 0.0
+        let line_width = l_len/w_width
+        let n_lines += float2nr(ceil(line_width))
+        let l += 1
+    endw
+    exe max([min([n_lines, a:maxheight]), a:minheight]) . "wincmd _"
+endfunction
 "<---Self
