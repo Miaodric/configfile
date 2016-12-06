@@ -45,8 +45,8 @@ tmux_conf_battery_palette='#d70000,#e4e4e4,#000000'
 #tmux_conf_battery_palette=gradient
 
 # display the battery status: charging (U+26A1) / discharging (U+1F50B)
-tmux_conf_battery_status=enabled
-#tmux_conf_battery_status=disabled
+#tmux_conf_battery_status=enabled
+tmux_conf_battery_status=disabled
 
 # or alternatively use an external tool, e.g. https://github.com/Goles/Battery
 #tmux_conf_battery='#(battery -t) '
@@ -82,6 +82,7 @@ tmux_conf_theme_hostname=enabled
 # highlight focuse pane, possible values are:
 #   - enabled
 #   - disabled
+# 一片墨绿色
 tmux_conf_theme_highlight_focused_pane=disabled
 #tmux_conf_theme_highlight_focused_pane=enabled
 
@@ -115,4 +116,14 @@ tmux_conf_new_session_prompt=false
 # this is the place to further customize tmux's configuration
 
 set -g history-limit 100000
-set-option -g allow-rename off
+#set-option -g allow-rename off
+
+#run-shell ~/.tmux/tmux-resurrect/resurrect.tmux
+#run-shell ~/.tmux/tmux-continuum/continuum.tmux
+set -g status-left "#{pane_current_path}#[fg=green](#S) #(whoami)"
+
+bind % split-window -h  -c '#{pane_current_path}'  # Split panes horizontal
+bind - split-window -v  -c '#{pane_current_path}'  # Split panes vertically
+bind c new-window  -c '#{pane_current_path}'  # Split panes vertically
+
+setw -g mode-keys vi

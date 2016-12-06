@@ -53,7 +53,6 @@ Bundle 'indentpython.vim'
 "snippets已经被UltiSnips代替
 "Bundle 'snipMate'
 Bundle 'a.vim'
-"Bundle 'minibufexpl.vim'
 Bundle 'fholgado/minibufexpl.vim'
 Bundle 'Mark'
 Bundle 'echofunc.vim'
