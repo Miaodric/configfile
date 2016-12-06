@@ -1,0 +1,5 @@
+#!/bin/zsh
+rm tags cscope.in.out cscope.out cscope.po.out; 
+/usr/bin/ctags -L cscope.files --c++-kinds=+p --fields=+iaS --extra=+q .; 
+cscope -Cbkq -i cscope.files;
+cscope reset

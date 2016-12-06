@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+# usage: myGrep key 'path'
+import os;
+import sys;
+
+target=sys.argv[1]
+my_dir=sys.argv[2]
+#'${target}' does not work
+exe_cmd = 'grep --color=always ' + '\'' + target+ '\'' + ' -rin ' + my_dir + ' |grep --color=always  -v tags|grep --color=always  -v cscop|grep --color=always  -v ^Bina'
+print exe_cmd
+os.system(exe_cmd)

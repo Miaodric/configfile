@@ -1,0 +1,10 @@
+#!/bin/sh
+# cp ~/.vim/.clang_complete .
+rm cscope.*
+rm tags
+rm filenametags
+
+rm ./.ycm_extra_conf.py
+rm cscope.files filenametags
+rm .ycm_extra_conf.pyc
+rm cctree.out

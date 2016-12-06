@@ -1,0 +1,21 @@
+#!/bin/bash
+# cp ~/.vim/.clang_complete .
+rm cscope.*
+rm tags
+rm filenametags
+rm Session.vim
+rm viminfo
+
+#rm ./.ycm_extra_conf.py
+#rm ./.ycm_extra_conf.pyc
+cp -i ~/myBin/.ycm_extra_conf.py .
+find . \( -path "./m2/target/oct_mips64"  -o -path "./bsp/shared" -o -regex "./firmware/fw/resource/UI5/default/[^e][^n][^g]" \) -prune -o \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.inl" -o -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.proto" -o -name "*.jse" -o -name "*.htm" -o -name "*.mak" -o -name "*.mk" -o -name "*.txt" -o -name "*.xml" -o -name "*.sh" -o -name "*.conf" -o -name "*.sql" -o -name "*.sym" \)  -print > cscope.files
+cscope -Cbkq -i cscope.files
+
+# generate tag file for lookupfile plugin
+echo -e "!_TAG_FILE_SORTED\t2\t/2=foldcase/" > filenametags
+find . -not -regex '.*\.\(png\|gif\)' -type f -printf "%f\t%p\t1\n" | \
+				     sort -f >> filenametags
+
+# --fields=+lS will generate  prompt about parameters when type a function name
+/usr/bin/ctags -L cscope.files --c++-kinds=+p --fields=+iaS --extra=+q .
