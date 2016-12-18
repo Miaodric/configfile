@@ -1,0 +1,15 @@
+[http]
+    sslverify = false
+	proxy = socks5://127.0.0.1:1080
+	postBuffer = 1048576000
+[alias]
+    co = checkout
+    ci = commit
+    br = branch
+    st = status
+    lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+[user]
+        email = ****@163.com
+        name = *****
+[https]
+	proxy = socks5://127.0.0.1:1080

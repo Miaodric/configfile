@@ -34,6 +34,7 @@ call vundle#rc()
 Bundle 'gmarik/vundle'
 " highlight in tmux
 Bundle 'keith/tmux.vim'
+Bundle 'marijnh/tern_for_vim'
 
 
 filetype plugin indent on     " required!
@@ -104,7 +105,6 @@ Bundle 'davidhalter/jedi-vim'
 " non github repos   (非上面两种情况的，按下面格式填写)
 "Bundle 'git://git.wincent.com/command-t.git'
 "当你自己写了个定制的插件，放在本地的时候
-Bundle 'file:///home/renmiaojian/myBin/plugin/fold.vim'
 
 
 " Brief help
@@ -240,10 +240,10 @@ endif
 endif
 "let psc_style='cool'
 "sudo cp ~/.vim/color/desert_my.vim /usr/share/vim/vim73/colors/
-colorscheme desert_my
+colorscheme desert
 else
 "set background=dark
-colorscheme desert_my
+colorscheme desert
 endif
 
 "Some nice mapping to switch syntax (useful if one mixes different languages in one file)
@@ -1331,7 +1331,7 @@ let g:multi_cursor_skip_key='<C-x>'
 let g:multi_cursor_quit_key='<Esc>'
 
 "Path for gf
-set path=.,/usr/local/include/c++/4.8.3/,/usr/include,~/message_mini/,~/wiwo/common,~/unetsecure/common,~/wiwo/empty_project
+set path=.,/usr/local/include/c++/4.8.3/,/usr/include
 
 
 "python with virtualenv support
