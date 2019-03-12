@@ -96,6 +96,7 @@ Bundle 'tmhedberg/SimpylFold'
 Bundle 'pangloss/vim-javascript'
 Bundle 'gregsexton/MatchTag'
 Bundle 'davidhalter/jedi-vim'
+Bundle 'jiangmiao/auto-pairs'
 "Bundle 'fishman/ctags'
 "Bundle 'tpope/vim-fugitive'
 "Bundle 'Lokaltog/vim-easymotion'
@@ -208,7 +209,7 @@ set guifont=Droid\ Sans\ Mono\ 14
 "internationalization
 "I only work in Win2k Chinese version
 if has("multi_byte")
-set tenc=utf-8,gbk
+"set tenc=utf-8,gbk
 set fencs=utf-8,gbk
 set termencoding=utf-8
 set encoding=utf-8
@@ -1249,6 +1250,7 @@ let g:ycm_collect_identifiers_from_tags_files=1	" 开启 YCM 基于标签引擎
 let g:ycm_min_num_of_chars_for_completion=2	" 从第2个键入字符就开始罗列匹配项
 let g:ycm_cache_omnifunc=0	" 禁止缓存匹配项,每次都重新生成匹配项
 let g:ycm_seed_identifiers_with_syntax=1	" 语法关键字补全
+let g:ycm_collect_identifiers_from_tag_files = 1 "使用ctags生成的tags文件
 " F5已经被Lookup file 占用，此处改为F7
 nnoremap <F7> :YcmForceCompileAndDiagnostics<CR>	"force recomile with syntastic
 "nnoremap <leader>lo :lopen<CR>	"open locationlist
