@@ -22,7 +22,7 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Default shortcuts can be referred by http://blog.csdn.net/donahue_ldz/article/details/17139361
 "Get out of VI's compatible mode..
-
+set noesckeys
 "-->vundle YCM
 set nocompatible              " be iMproved
 filetype off                  " required!
@@ -31,6 +31,13 @@ call vundle#rc()
 
 " let Vundle manage Vundle
 " required!
+Bundle 'tenfyzhong/tagbar-proto.vim'
+Bundle 'pseewald/nerdtree-tagbar-combined'
+Bundle 'uarun/vim-protobuf'
+Bundle 'majutsushi/tagbar'
+"Bundle 'taglist.vim'
+"Bundle 'winmanager'
+
 Bundle 'gmarik/vundle'
 " highlight in tmux
 Bundle 'keith/tmux.vim'
@@ -65,9 +72,7 @@ Bundle 'L9'
 "Bundle 'SuperTab'
 Bundle 'ctags.vim'
 Bundle 'cscope.vim'
-Bundle 'taglist.vim'
 Bundle 'CCTree'
-Bundle 'winmanager'
 Bundle 'DoxygenToolkit.vim'
 "优先用下面的那个Bundle 'SirVer/ultisnips'
 "Bundle 'UltiSnips'
@@ -88,7 +93,7 @@ Bundle 'terryma/vim-multiple-cursors'
 Bundle 'nvie/vim-flake8'
 Bundle 'slim-template/vim-slim'
 "Bundle 'brookhong/DBGPavim'
-Bundle 'joonty/vdebug'
+"Bundle 'joonty/vdebug'
 "For python fold recommended by
 "https://realpython.com/blog/python/vim-and-python-a-match-made-in-heaven/
 Bundle 'tmhedberg/SimpylFold'
@@ -102,6 +107,8 @@ Bundle 'jiangmiao/auto-pairs'
 "Bundle 'Lokaltog/vim-easymotion'
 "Bundle 'rstacruz/sparkup', {'rtp': 'vim/'}
 "Bundle 'tpope/vim-rails.git'
+Plugin 'fatih/vim-go'
+Plugin 'Blackrush/vim-gocode'
 
 " non github repos   (非上面两种情况的，按下面格式填写)
 "Bundle 'git://git.wincent.com/command-t.git'
@@ -556,7 +563,7 @@ set nowb
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Enable folding, I find it very useful
 if exists("&foldenable")
-set fen
+set nofen
 endif
 
 if exists("&foldlevel")
@@ -661,14 +668,23 @@ endfunction
 function! NERDTree_IsValid()
 	return 1
 endfunction
-"let g:winManagerWindowLayout = "FileExplorer|TagList"
-"let g:winManagerWindowLayout = "TagList"
-let g:winManagerWindowLayout = "NERDTree|TagList"
+let g:Tagbar_title = "[Tagbar]"
+function! Tagbar_Start()
+    exe 'q'
+    exe 'TagbarOpen'
+endfunction
+
+function! Tagbar_IsValid()
+    return 1
+endfunction
+
+let g:winManagerWindowLayout = "NERDTree|Tagbar"
 let g:winManagerWidth = 22
 let g:defaultExplorer = 0
 nmap <C-W><C-F> :FirstExplorerWindow<cr>
 nmap <C-W><C-B> :BottomExplorerWindow<cr>
-nmap wm :WMToggle<cr>
+"nmap wm :WMToggle<cr>
+nmap wm :ToggleNERDTreeAndTagbar<cr>
 
 let g:bufExplorerSortBy = "name"
 
@@ -1126,6 +1142,7 @@ nmap <leader>lv :lv /<c-r>=expand("<cword>")<cr>/ %<cr>:lw<cr>
 "Append behavior by default, key mapping for clearing the quickfix window
 set cscopequickfix=s+,c+,d+,i+,t+,e+
 "map <F6> :call setqflist([])<cr> 
+imap <F6> <C-x><C-o>
 map <unique><s-F12> :cp<cr>
 map <unique><F12> :cn<cr>
 "---->complete related
@@ -1278,8 +1295,9 @@ let g:syntastic_warning_symbol = '⚠'
 let g:syntastic_check_on_open=1
 let g:syntastic_enable_highlighting = 0
 "let g:syntastic_python_checker="flake8,pyflakes,pep8,pylint"
-let g:syntastic_python_checkers=['pyflakes']
-"highlight SyntasticErrorSign guifg=white guibg=black
+"let g:syntastic_python_checkers=['pyflakes']
+let g:syntastic_python_checkers=['flake8', 'python3']
+highlight SyntasticErrorSign guifg=white guibg=black
 
 let g:syntastic_cpp_include_dirs = ['/usr/include/']
 let g:syntastic_cpp_remove_include_errors = 1
@@ -1337,7 +1355,7 @@ set path=.,/usr/local/include/c++/4.8.3/,/usr/include
 
 
 "python with virtualenv support
-py << EOF
+py3 << EOF
 import os
 import sys
 if 'VIRTUAL_ENV' in os.environ:
@@ -1475,4 +1493,29 @@ function! AdjustWindowHeight(minheight, maxheight)
     endw
     exe max([min([n_lines, a:maxheight]), a:minheight]) . "wincmd _"
 endfunction
+let g:go_bin_path="/Users/mac/code/go/bin/"
+
+" YouCompleteMe 配置
+let g:ycm_server_python_interpreter='/usr/local/bin/python3.7'
+" Note that you can install YCM with both libclang and clangd enabled. In that case clangd will be preferred unless you have the following in your vimrc:
+"let g:ycm_use_clangd = 0
+" 寻找全局配置文件
+let g:ycm_global_ycm_extra_conf = "~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py"
+let g:ycm_language_server =
+  \ [
+  \   {
+  \     'name': 'gopls',
+  \     'cmdline': [ '~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls' , "-rpc.trace" ],
+  \     'filetypes': [ 'go' ],
+  \     "project_root_files": [ "go.mod" ]
+  \   }
+  \ ]
+
+let g:go_def_mode = 'gopls'
+let g:go_info_mode = 'gopls'
+"let g:go_def_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
+"let g:go_info_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
+" 开启YouCompleteMe 日志模式
+" let g:ycm_log_level = 'debug'
+set completeopt=longest,menu
 "<---Self
