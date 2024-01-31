@@ -22,34 +22,157 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Default shortcuts can be referred by http://blog.csdn.net/donahue_ldz/article/details/17139361
 "Get out of VI's compatible mode..
-set noesckeys
+"set noesckeys
+set fileformat=unix
 "-->vundle YCM
 set nocompatible              " be iMproved
 filetype off                  " required!
-set rtp+=~/.vim/bundle/vundle/
+" set rtp+=~/.vim/bundle/vundle/
+set rtp+=~/.vim/bundle/Vundle.vim/
 call vundle#rc()
+
 
 " let Vundle manage Vundle
 " required!
+"  ============ncm2=============>
+"缓存
+autocmd BufEnter * call ncm2#enable_for_buffer()
+" 补全模式,具体详情请看下文
+set completeopt=noinsert,menuone,noselect
+set shortmess+=c
+inoremap <c-c> <ESC>
+" 延迟弹窗,这样提示更加流畅
+let ncm2#popup_delay = 5
+"输入几个字母开始提醒:[[最小优先级,最小长度]]
+"如果是输入的是[[1,3],[7,2]],那么优先级在1-6之间,会在输入3个字符弹出,如果大于等于7,则2个字符弹出----优先级概念请参考文档中 ncm2-priority
+let ncm2#complete_length = [[1, 1]]
+"模糊匹配模式,详情请输入:help ncm2查看相关文档
+let g:ncm2#matcher = 'substrfuzzy'
+"使用tab键向下选择弹框菜单
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+"使用shift+tab键向上选择弹窗菜单,这里不设置因为笔记本比较难操作.如果向下太多我通常习惯使用Backspace键再重新操作一遍
+"inoremap <expr> <S> pumvisible() ? "\<C-p>" : "\<S>"
+"  <============ncm2=============
+if executable('pylsp')
+    " pip install python-lsp-server
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'pylsp',
+        \ 'cmd': {server_info->['pylsp']},
+        \ 'allowlist': ['python'],
+        \ })
+endif
+
+if executable('clangd')
+    augroup lsp_clangd
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+                    \ 'name': 'clangd',
+                    \ 'cmd': {server_info->['clangd']},
+                    \ 'allowlist': ['c', 'cpp'],
+                    \ 'whitelist': ['c', 'cpp'],
+                \ 'semantic_highlight': {
+                \     'entity.name.function.cpp':'Function',
+                \     'entity.name.function.method.cpp':'Function',
+                \     'entity.name.type.enum.cpp':'Identifier',
+                \     'entity.name.type.class.cpp':'Identifier',
+                \     'meta.disabled':'Comment'
+                \ }})
+        autocmd FileType c setlocal omnifunc=lsp#complete
+        autocmd FileType cpp setlocal omnifunc=lsp#complete
+        autocmd FileType objc setlocal omnifunc=lsp#complete
+        autocmd FileType objcpp setlocal omnifunc=lsp#complete
+    augroup end
+endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gs <plug>(lsp-document-symbol-search)
+    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> gi <plug>(lsp-implementation)
+    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+    "nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+    "nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+
+    let g:lsp_format_sync_timeout = 1000
+    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+call plug#begin()
+Plug 'bfrg/vim-cpp-modern'
+" <-- LSP start
+Plug 'williamboman/mason.nvim'
+Plug 'williamboman/mason-lspconfig.nvim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'wincent/command-t'
+"Plug 'mfulz/cscope.nvim'
+Plug 'folke/which-key.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'ibhagwan/fzf-lua'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'dhananjaylatkar/cscope_maps.nvim'
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'nvim-lua/completion-nvim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
+Plug 'autozimu/LanguageClient-neovim', {
+    \ 'branch': 'next',
+    \ 'do': 'bash install.sh',
+    \ }
+
+" (Optional) Multi-entry selection UI.
+Plug 'junegunn/fzf'
+Plug 'ncm2/ncm2'
+Plug 'roxma/nvim-yarp'
+Plug 'ncm2/ncm2-bufword'
+Plug 'ncm2/ncm2-path'
+Plug 'ncm2/ncm2-jedi'
+Plug 'nvim-lua/lsp-status.nvim'
+" <-- LSP stop
+
+Plugin 'octol/vim-cpp-enhanced-highlight'
+Plugin 'bfrg/vim-cpp-modern'
+Plugin 'gmarik/Vundle.vim'
+Plugin 'hari-rangarajan/CCTree'
+Plugin 'w0rp/ale'
+"Plugin 'VundleVim/Vundle.vim'
 Bundle 'tenfyzhong/tagbar-proto.vim'
 Bundle 'pseewald/nerdtree-tagbar-combined'
 Bundle 'uarun/vim-protobuf'
 Bundle 'majutsushi/tagbar'
 "Bundle 'taglist.vim'
-"Bundle 'winmanager'
+Bundle 'winmanager'
 
 Bundle 'gmarik/vundle'
 " highlight in tmux
 Bundle 'keith/tmux.vim'
 Bundle 'marijnh/tern_for_vim'
+Plugin 'Shougo/unite.vim'
+Plugin 'devjoe/vim-codequery'
+Plugin 'mileszs/ack.vim'
 
 
 filetype plugin indent on     " required!
 
 " My Bundles here:  /* 插件配置格式 */
-"   
+"
 " vim-scripts repos  （vim-scripts仓库里的，按下面格式填写）
-Bundle 'lookupfile'
+"Bundle 'lookupfile'
 Bundle 'genutils'
 Bundle 'xml.vim'
 Bundle 'indentpython.vim'
@@ -62,17 +185,18 @@ Bundle 'indentpython.vim'
 "Bundle 'snipMate'
 Bundle 'a.vim'
 Bundle 'fholgado/minibufexpl.vim'
-Bundle 'Mark'
+"Deprecated Mark; use vim-mark instead
+"Bundle 'Mark'
+Bundle 'inkarkat/vim-ingo-library'
+Bundle 'inkarkat/vim-mark'
 Bundle 'echofunc.vim'
 Bundle 'Visual-Mark'
-Bundle 'grep.vim'
+Plugin 'yegappan/grep'
 Bundle 'L9'
 "Bundle 'FuzzyFinder'
 "Supertab容易引起tab只是补全无法缩进的问题
 "Bundle 'SuperTab'
 Bundle 'ctags.vim'
-Bundle 'cscope.vim'
-Bundle 'CCTree'
 Bundle 'DoxygenToolkit.vim'
 "优先用下面的那个Bundle 'SirVer/ultisnips'
 "Bundle 'UltiSnips'
@@ -85,12 +209,11 @@ Bundle 'scrooloose/nerdtree'
 Bundle 'scrooloose/nerdcommenter'
 Bundle 'tpope/vim-pathogen'
 Bundle 'Valloric/YouCompleteMe'
-Bundle 'scrooloose/syntastic'
 Bundle 'SirVer/ultisnips'
 Bundle 'honza/vim-snippets'
-"Bundle 'kien/ctrlp.vim'
 Bundle 'terryma/vim-multiple-cursors'
 Bundle 'nvie/vim-flake8'
+Bundle 'Chiel92/vim-autoformat'
 Bundle 'slim-template/vim-slim'
 "Bundle 'brookhong/DBGPavim'
 "Bundle 'joonty/vdebug'
@@ -100,7 +223,7 @@ Bundle 'tmhedberg/SimpylFold'
 "Javascript highlight
 Bundle 'pangloss/vim-javascript'
 Bundle 'gregsexton/MatchTag'
-Bundle 'davidhalter/jedi-vim'
+Plugin 'davidhalter/jedi-vim'
 Bundle 'jiangmiao/auto-pairs'
 "Bundle 'fishman/ctags'
 "Bundle 'tpope/vim-fugitive'
@@ -110,10 +233,150 @@ Bundle 'jiangmiao/auto-pairs'
 Plugin 'fatih/vim-go'
 Plugin 'Blackrush/vim-gocode'
 
+"Indent related
+"https://www.arthurkoziel.com/setting-up-vim-for-yaml/
+Plugin 'Yggdroot/indentLine'
+Plugin 'pedrohdz/vim-yaml-folds'
+"删除行末空格
+Bundle 'bronson/vim-trailing-whitespace'
+map <leader><space> :FixWhitespace<cr>
+"Plugin 'dense-analysis/ale'
+
 " non github repos   (非上面两种情况的，按下面格式填写)
 "Bundle 'git://git.wincent.com/command-t.git'
 "当你自己写了个定制的插件，放在本地的时候
+call plug#end()
 
+let g:LanguageClient_serverCommands = {
+    \ 'python': ['/usr/local/python3/bin/pylsp'],
+    \ 'go': ['gopls'],
+    \ 'cpp': ['clangd', '--log-file=/tmp/clangd.log']
+    \ }
+
+
+lua << EOF
+require("mason").setup({
+    ui = {
+        icons = {
+            package_installed = "✓",
+            package_pending = "➜",
+            package_uninstalled = "✗"
+        }
+    }
+})
+require("mason-lspconfig").setup{
+    ensure_installed = { "pylsp", "clangd", 'gopls' },
+}
+require("cscope_maps").setup()
+local lsp_status = require('lsp-status')
+local completion = require('completion')
+local configs = require('lspconfig')
+configs.clangd.setup{}
+configs.pylsp.setup{
+on_attach = custom_attach,
+settings = {
+    pylsp = {
+    plugins = {
+        -- formatter options
+        black = { enabled = true },
+        autopep8 = { enabled = false },
+        yapf = { enabled = false },
+        -- linter options
+        pylint = { enabled = true, executable = "pylint" },
+        pyflakes = { enabled = false },
+        pycodestyle = { enabled = false },
+        ruff = { enabled = true },
+        -- type checker
+        pylsp_mypy = { enabled = true },
+        -- auto-completion options
+        jedi_completion = { fuzzy = true },
+        -- import sorting
+        pyls_isort = { enabled = true },
+    },
+    },
+},
+flags = {
+    debounce_text_changes = 200,
+},
+capabilities = capabilities,
+}
+configs.gopls.setup{
+  on_attach = on_attach,
+  capabilities = lsp_status.capabilities,
+  settings = {
+    gopls = {
+      usePlaceholders = true,
+      codelenses = {
+        upgrade_dependency = true,
+        test = true
+      },
+      experimentalWorkspaceModule = true
+    }
+  }
+}
+EOF
+" Run gofmt on save
+autocmd BufWritePre *.go :call LanguageClient#textDocument_formatting_sync()
+
+"https://github.com/autozimu/LanguageClient-neovim/blob/next/doc/LanguageClient.txt
+"full list of Plug mappings is:
+
+"*(lcn-menu)*
+"Calls LanguageClient_contextMenu.
+
+"*(lcn-hover)*
+"Calls LanguageClient_textDocument_hover.
+
+"*(lcn-rename)*
+"Calls LanguageClient_textDocument_rename.
+
+"*(lcn-definition)
+"Calls LanguageClient_textDocument_definition.
+
+"*(lcn-type-definition)*
+"Calls LanguageClient_textDocument_typeDefinition.
+
+"*(lcn-references)*
+"Calls LanguageClient_textDocument_references.
+
+"*(lcn-implementation)*
+"Calls LanguageClient_textDocument_implementation.
+
+"*(lcn-code-action)*
+"Calls LanguageClient_textDocument_codeAction if called in normal model or
+"LanguageClient_textDocument_visualCodeAction if called in visual mode.
+
+"*(lcn-code-lens-action)*
+"Calls LanguageClient_handleCodeLensAction.
+
+"*(lcn-symbols)*
+"Calls LanguageClient_textDocument_documentSymbol.
+
+"*(lcn-highlight)*
+"Calls LanguageClient_textDocument_documentHighlight.
+
+"*(lcn-explain-error)*
+"Calls LanguageClient_textDocument_explainErrorAtPoint.
+
+"*(lcn-format)*
+"Calls LanguageClient_textDocument_formatting.
+
+"*(lcn-format-sync)*
+"Calls LanguageClient_textDocument_formatting_sync.
+
+"*(lcn-diagnostics-next)*
+"Calls LanguageClient_diagnosticsNext.
+
+"*(lcn-diagnostics-prev)*
+"Calls LanguageClient_diagnosticsPrevious.
+"nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+"nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
+nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+nmap <C-\>g <Plug>(lcn-definition)
+nmap <C-\>s <Plug>(lcn-references)
+nmap <C-\>t <Plug>(lcn-symbols)
+"nmap <C-\>s <Plug>(lcn-references)
 
 " Brief help
 " :BundleList          - list configured bundles
@@ -125,10 +388,10 @@ Plugin 'Blackrush/vim-gocode'
 " NOTE: comments after Bundle command are not allowed..
 " python 模板在https://gist.github.com/locojay/4950253
 
-let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
-if !empty(glob("./.ycm_extra_conf.py"))
-    let g:ycm_global_ycm_extra_conf = './.ycm_extra_conf.py'
-endif
+let g:ycm_global_ycm_extra_conf = '$HOME/.vim/bundle/YouCompleteMe/third_party/ycmd/.ycm_extra_conf.py'
+"if !empty(glob("./.ycm_extra_conf.py"))
+    "let g:ycm_global_ycm_extra_conf = './.ycm_extra_conf.py'
+"endif
 "<---YCM
 set nocompatible
 set autowrite
@@ -211,7 +474,7 @@ hi NonText  cterm=bold  gui=none
 hi xmlTag ctermfg=blue cterm=bold guifg=white
 hi xmlTagName ctermfg=blue cterm=bold guifg=white
 hi xmlEndTag ctermfg=blue cterm=bold guifg=white
-set guifont=Droid\ Sans\ Mono\ 14
+" set guifont=Droid\ Sans\ Mono\ 14
 
 "internationalization
 "I only work in Win2k Chinese version
@@ -221,7 +484,8 @@ set fencs=utf-8,gbk
 set termencoding=utf-8
 set encoding=utf-8
 "set fileencodings=ucs-bom,utf-8,chinese
-set fileencoding=gb18030
+"set fileencoding=gb18030
+set fileencoding=utf-8
 "set fileencodings=utf-8,gb18030,utf-16,big5
 set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
 endif
@@ -248,9 +512,11 @@ endif
 endif
 "let psc_style='cool'
 "sudo cp ~/.vim/color/desert_my.vim /usr/share/vim/vim73/colors/
+"colorscheme darkblue
 colorscheme desert
 else
 "set background=dark
+"colorscheme darkblue
 colorscheme desert
 endif
 
@@ -274,12 +540,7 @@ endif
 "Favorite filetype
 "Use Unix as the standard file type
 set ffs=unix,dos,mac
-
-nmap <leader>fd :se ff=dos<cr>
-nmap <leader>fu :se ff=unix<cr>
-
-
-
+set ff=unix
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM userinterface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -378,12 +639,12 @@ fun! FixMiniBufExplorerTitle()
     endif
 endfun
 
-if v:version>=600
-	au BufWinEnter *
-				\ let oldwinnr=winnr() |
-				\ windo call FixMiniBufExplorerTitle() |
-				\ exec oldwinnr . " wincmd w"
-endif
+"if v:version>=600
+	"au BufWinEnter *
+				"\ let oldwinnr=winnr() |
+				"\ windo call FixMiniBufExplorerTitle() |
+				"\ exec oldwinnr . " wincmd w"
+"endif
 endif
 
 " Nice window title
@@ -481,10 +742,10 @@ ia xdate <c-r>=strftime("%d/%m/%y %H:%M:%S")<cr>
 "map 0 ^
 
 "Move a line of text using control
-nmap <M-j> mz:m+<cr>`z
-nmap <M-k> mz:m-2<cr>`z
-vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
-vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
+"nmap <M-j> mz:m+<cr>`z
+"nmap <M-k> mz:m-2<cr>`z
+"vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
+"vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 
 if MySys() == "mac"
 nmap <D-j> <M-j>
@@ -646,11 +907,11 @@ let g:miniBufExplMapWindowNavVim = 1
 let g:miniBufExplSplit = 1
 "let g:miniBufExplSplitBelow=1
 
-let g:miniBufExplMapWindowNavArrows = 1  
-let g:miniBufExplMapCTabSwitchWindows = 1  
-  
-"解决FileExplorer窗口变小问题  
-let g:miniBufExplForceSyntaxEnable = 1  
+let g:miniBufExplMapWindowNavArrows = 1
+let g:miniBufExplMapCTabSwitchWindows = 1
+
+"解决FileExplorer窗口变小问题
+let g:miniBufExplForceSyntaxEnable = 1
 set noequalalways
 "let g:miniBufExplorerMoreThanOne=2
 
@@ -661,7 +922,7 @@ set noequalalways
 " winManager setting
 " 来自 进阶教程
 """"""""""""""""""""""""""""""
-let g:NERDTree_title="[NERD Tree]" 
+let g:NERDTree_title="[NERD Tree]"
 function! NERDTree_Start()
 	exec 'NERDTree'
 endfunction
@@ -696,11 +957,11 @@ let g:bufExplorerSortBy = "name"
 if MySys() == "windows"                "设定windows系统中ctags程序的位置
 	let Tlist_Ctags_Cmd = 'ctags'
 elseif MySys() == "linux"              "设定linux系统中ctags程序的位置
-    let Tlist_Ctags_Cmd="/usr/bin/ctags" 
+    let Tlist_Ctags_Cmd="/usr/local/bin/ctags"
 endif
-let Tlist_Ctags_Cmd="/usr/bin/ctags" 
-let Tlist_Show_One_File=1     "不同时显示多个文件的tag，只显示当前文件的    
-let Tlist_Exit_OnlyWindow=1   "如果taglist窗口是最后一个窗口，则退出vim   
+let Tlist_Ctags_Cmd="/usr/local/bin/ctags"
+let Tlist_Show_One_File=1     "不同时显示多个文件的tag，只显示当前文件的
+let Tlist_Exit_OnlyWindow=1   "如果taglist窗口是最后一个窗口，则退出vim
 let Tlist_Sort_Type = "name"
 let Tlist_Show_Menu = 1
 map <F3> :Tlist<cr>
@@ -865,11 +1126,15 @@ ia <buffer> #i import
 ia <buffer> #p print
 ia <buffer> #m if __name__=="__main":
 "Remove trailing white spaces when saving a python file:
-autocmd BufWrite *.py :call DeleteTrailingWS()
+autocmd BufWrite * :call DeleteTrailingWS()
 "noremap <leader>w :call DeleteTrailingWS()<CR>
 
 "flake8
-autocmd FileType python map <buffer> <leader><F3> :call Flake8()<CR>
+"autocmd FileType python map <buffer> <leader><F3> :call Flake8()<CR>
+"autocmd BufWritePost *.py call Flake8()
+"autocmd BufWritePost *.py start call flake8#Flake8()
+autocmd BufWritePost *.py call Flake8()
+
 
 set foldmethod=indent
 set foldlevel=99
@@ -904,10 +1169,6 @@ inoremap <C-v> <esc>:set paste<cr>mui<C-R>+<esc>mv'uV'v=:set nopaste<cr>
 "" 打开文件时，按照 viminfo 保存的上次关闭时的光标位置重新设置光标
 au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
 
-"如果不设定g:LookupFile_TagExpr的值，那么lookupfile插件会以tags选项定义的文件作为它的tag文件
-"不允许创建不存在的文件
-"let g:LookupFile_AllowNewFiles = 0
-let g:LookupFile_TagExpr = '"./filenametags"'
 
 "p4
 nnoremap @p4a :!p4 add %:p
@@ -915,11 +1176,12 @@ nnoremap @p4e :!p4 edit %:p
 nnoremap @p4d :!p4 diff %:
 
 "CrlP的配置
+"Bundle 'kien/ctrlp.vim'
 "https://github.com/kien/ctrlp.vim
-let g:ctrlp_working_path_mode = 'ra'
-set wildignore+=*/tmp/*,*.so,*.swp,*.zip
-let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
-let g:ctrlp_user_command = 'find %s -type f'
+"let g:ctrlp_working_path_mode = 'ra'
+"set wildignore+=*/tmp/*,*.so,*.swp,*.zip
+"let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
+"let g:ctrlp_user_command = 'find %s -type f'
 "<-CrlP的配置
 
 ""FuzzyFinder 配置"{{{http://blog.chinaunix.net/uid-20147410-id-1646168.html
@@ -1019,8 +1281,8 @@ let g:ctrlp_user_command = 'find %s -type f'
                    "\':exe "FufHelp                         " |" sh     ',
                    "\':exe "FufEditDataFile                 " |" se     ',
                    "\':exe "FufRenewCache                   " |" sr     ',
-                   "\':exe "FufDir ~/"                        |" 更换目录从家目录jml', 
-                   "\':exe "FufFile ~/"                       |" 打开文件从家目录jml', 
+                   "\':exe "FufDir ~/"                        |" 更换目录从家目录jml',
+                   "\':exe "FufFile ~/"                       |" 打开文件从家目录jml',
                    "\]
 
 
@@ -1028,61 +1290,65 @@ let g:ctrlp_user_command = 'find %s -type f'
 "nnoremap <silent> <F4> :call fuf#givencmd#launch('', 0, '选择命令>', g:fuf_com_list)<CR>
 ""<---fuzzyfinder
 "-->lookup file with ignore case
-function! LookupFile_IgnoreCaseFunc(pattern)
-	let _tags = &tags
-	try
-		let &tags = eval(g:LookupFile_TagExpr)
-		let newpattern = '\c' . a:pattern
-		let tags = taglist(newpattern)
-	catch
-		echohl ErrorMsg | echo
-		"Exception: " . v:exception |
-		echohl NONE
-		return ""
-	finally
-		let &tags = _tags
-	endtry
-
-"Show the matches for what is typed so far.
-    let files = map(tags, 'v:val["filename"]')
-        return files
-endfunction
-let g:LookupFile_LookupFunc ='LookupFile_IgnoreCaseFunc'
+"如果不设定g:LookupFile_TagExpr的值，那么lookupfile插件会以tags选项定义的文件作为它的tag文件
+"不允许创建不存在的文件
+"let g:LookupFile_AllowNewFiles = 0
+"let g:LookupFile_TagExpr = '"./filenametags"'
+"function! LookupFile_IgnoreCaseFunc(pattern)
+"	let _tags = &tags
+"	try
+"		let &tags = eval(g:LookupFile_TagExpr)
+"		let newpattern = '\c' . a:pattern
+"		let tags = taglist(newpattern)
+"	catch
+"		echohl ErrorMsg | echo
+"		"Exception: " . v:exception |
+"		echohl NONE
+"		return ""
+"	finally
+"		let &tags = _tags
+"	endtry
+"
+""Show the matches for what is typed so far.
+"    let files = map(tags, 'v:val["filename"]')
+"        return files
+"endfunction
+"let g:LookupFile_LookupFunc ='LookupFile_IgnoreCaseFunc'
 "<--lookup file with ignore case
 "
 "cscope相关的设置-->
 "从~/vim-config/plugin/cscope_maps.vim拷贝出来
-if has("cscope")
+"if has("cscope")
 
-    """"""""""""" Standard cscope/vim boilerplate
+    """""""""""""" Standard cscope/vim boilerplate
 
-    " use both cscope and ctag for 'ctrl-]', ':ta', and 'vim -t'
-    set cscopetag
+    "" use both cscope and ctag for 'ctrl-]', ':ta', and 'vim -t'
+    "set cscopetag
 
-    " check cscope for definition of a symbol before checking ctags: set to 1
-    " if you want the reverse search order.
-    set csto=0
+    "" check cscope for definition of a symbol before checking ctags: set to 1
+    "" if you want the reverse search order.
+    "set csto=0
 
-    " add any cscope database in current directory
-    if filereadable("cscope.out")
-        cs add cscope.out  
-    " else add the database pointed to by environment variable 
-    elseif $CSCOPE_DB != ""
-        cs add $CSCOPE_DB
-    endif
+    "" add any cscope database in current directory
+    "if filereadable("cscope.out")
+        "cs add cscope.out
+    "" else add the database pointed to by environment variable
+    "elseif $CSCOPE_DB != ""
+        "cs add $CSCOPE_DB
+    "endif
 
-    " show msg when any other cscope db added
-    set cscopeverbose  
-    
-	nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>	
-    nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>	
-    nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>	
-    nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>	
-    nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>	
-    nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>	
-    nmap <C-\>i :cs find i <C-R>=expand("<cfile>")<CR><CR>
-    nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>	
-endif
+    "" show msg when any other cscope db added
+    "set cscopeverbose
+
+"endif
+    nmap <C-\>s :Cscope find s <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-\>g :Cscope find g <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-\>c :Cscope find c <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-\>t :Cscope find t <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-\>e :Cscope find e <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-\>f :Cscope find f <C-R>=expand("<cfile>")<CR><CR>
+    nmap <C-\>i :Cscope find i <C-R>=expand("<cfile>")<CR><CR>
+    nmap <C-\>d :Cscope find d <C-R>=expand("<cword>")<CR><CR>
 "<--cscope相关的设置
 
 "map <C-\><F12> :!rm tags cscope.in.out cscope.out cscope.po.out; ctags -L cscope.files --c++-kinds=+p --fields=+iaS --extra=+q .; cscope -Cbkq -i cscope.files;cscope reset<CR>
@@ -1096,21 +1362,17 @@ if filereadable("Session.vim")
 		set sessionoptions-=sesdir
 		au VimEnter * source ./Session.vim
 		au VimEnter * rviminfo ./viminfo
-		au VimLeave * mksession! ./Session.vim 
+		au VimLeave * mksession! ./Session.vim
 		au VimLeave * wviminfo! ./viminfo
 	endif
 endif
 
-" font
-"set guifont=Courier_new:h11:b:cDEFAULT
 
 """"""""""""""""""""""""""""""
 " mark setting
 """""""""""""""""""""""""""""""
 nmap <silent> <leader>hl <Plug>MarkSet
-vmap <silent> <leader>hl <Plug>MarkSet
 nmap <silent> <leader>hh <Plug>MarkClear
-vmap <silent> <leader>hh <Plug>MarkClear
 nmap <silent> <leader>hr <Plug>MarkRegex
 "resize
 "Adopt default shortcuts
@@ -1133,20 +1395,57 @@ nmap <silent> <leader>hr <Plug>MarkRegex
 map <leader><leader>l :vertical res +8<cr>
 map <leader><leader>h :vertical res -8<cr>
 map <leader><leader>k :res +8<cr>
-map <leader><leader>j :res -8<cr> 
+map <leader><leader>j :res -8<cr>
 "Make the qucickfix window in the bottom
 "botright cwindow
 au FileType qf wincmd J
 "look up the word on the cursor in the current file
 nmap <leader>lv :lv /<c-r>=expand("<cword>")<cr>/ %<cr>:lw<cr>
 "Append behavior by default, key mapping for clearing the quickfix window
-set cscopequickfix=s+,c+,d+,i+,t+,e+
-"map <F6> :call setqflist([])<cr> 
+"set cscopequickfix=s+,c+,d+,i+,t+,e+
+"map <F6> :call setqflist([])<cr>
 imap <F6> <C-x><C-o>
-map <unique><s-F12> :cp<cr>
-map <unique><F12> :cn<cr>
+map <leader><F12> :cp<cr>
+map <F12> :cn<cr>
 "---->complete related
-"http://www.cnblogs.com/chezxiaoqiang/archive/2012/02/29/2674392.html                        
+let g:ycm_server_python_interpreter='/usr/local/python3/bin/python3'
+let g:ycm_key_invoke_completion = '<c-x>'
+" Note that you can install YCM with both libclang and clangd enabled. In that case clangd will be preferred unless you have the following in your vimrc:
+" 寻找全局配置文件
+"let g:ycm_language_server =
+  "\ [
+  "\   {
+  "\     'name': 'gopls',
+  "\     'cmdline': [ '~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls' , "-rpc.trace" ],
+  "\     'filetypes': [ 'go' ],
+  "\     "project_root_files": [ "go.mod" ]
+  "\   }
+  "\ ]
+
+let g:ycm_use_clangd = 1
+let g:ycm_clangd_uses_ycmd_caching = 0
+let g:ycm_clangd_binary_path = exepath("clangd")
+let g:ycm_semantic_triggers =  {
+  \   'c' : ['->', '.'],
+  \   'objc' : ['->', '.', 're!\[[_a-zA-Z]+\w*\s', 're!^\s*[^\W\d]\w*\s',
+  \             're!\[.*\]\s'],
+  \   'ocaml' : ['.', '#'],
+  \   'cpp,objcpp' : ['->', '.', '::'],
+  \   'perl' : ['->'],
+  \   'php' : ['->', '::'],
+  \   'cs,java,javascript,typescript,d,python,perl6,scala,vb,elixir,go' : ['.'],
+  \   'ruby' : ['.', '::'],
+  \   'lua' : ['.', ':'],
+  \   'erlang' : [':'],
+  \ }
+let g:ycm_filetype_whitelist = {
+			\ "c":1,
+			\ "py":1,
+			\ "h":1,
+			\ "cpp":1,
+			\ }
+"let g:ycm_key_invoke_completion =
+"http://www.cnblogs.com/chezxiaoqiang/archive/2012/02/29/2674392.html
 "" Neocomplcache settings do not use example files
 "let g:neocomplcache_enable_at_startup = 1
 "let g:neocomplcache_enable_smart_case = 1
@@ -1157,21 +1456,20 @@ map <unique><F12> :cn<cr>
 "inoremap <expr><C-h> neocomplcache#smart_close_popup()."\<C-h>"
 "inoremap <expr><BS> neocomplcache#smart_close_popup()."\<C-h>"
 "inoremap <expr><C-y>  neocomplcache#close_popup()
-"inoremap <expr><C-e>  neocomplcache#cancel_popup()     
+"inoremap <expr><C-e>  neocomplcache#cancel_popup()
 "clang complete
 "let g:clang_complete_copen=1
-"let g:clang_complete_auto = 1
+let g:clang_complete_auto = 1
 "let g:clang_periodic_quickfix=1
 "let g:clang_snippets=1
 "let g:clang_close_preview=1
 "let g:clang_use_library=1
 "let g:clang_user_options='-ferror-limit=0 || exit 0'
-""let g:clang_user_options='-stdlib=libc++ -std=c++11 -IIncludePath'
-""let g:clang_user_options='-std=c++11'
-""location of libclang.[dll/so/dylib]
-"let g:clang_library_path='/usr/lib/llvm-3.3/lib/'
+"let g:clang_user_options='-stdlib=libc++ -std=c++11 -IIncludePath'
+"let g:clang_user_options='-std=c++11'
+"location of libclang.[dll/so/dylib]
+"let g:clang_library_path='/usr/lib64/llvm/'
 ""为了让补全显示不多建立一个窗口
-"set completeopt=longest,menu
 "<----complete related
 "let g:loaded_winfileexplorer =1
 
@@ -1194,7 +1492,7 @@ let showmarks_include = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 let showmarks_ignore_type = "hqm"
 " Hilight lower & upper marks
 let showmarks_hlline_lower = 1
-let showmarks_hlline_upper = 1 
+let showmarks_hlline_upper = 1
 """"""""""""""""""""""""""""""
 " markbrowser setting
 """"""""""""""""""""""""""""""
@@ -1213,7 +1511,7 @@ nmap <silent> <leader>mk :MarksBrowser<cr>
 "<--Readonly
 
 "CCTree
-set updatetime=0
+set updatetime=50
 let g:CTreeRecursiveDepth = 2
 let g:CCTreeKeyTraceForwardTree = '<leader>.'
 let g:CCTreeKeyTraceReverseTree = '<leader>,'
@@ -1228,7 +1526,7 @@ function! LoadCCTree()
    if filereadable('cctree.out')
        CCTreeLoadXRefDB cctree.out
 "   else
-"       CCTreeLoadDB cscope.out 
+"       CCTreeLoadDB cscope.out
 "       CCTreeSaveXRefDB cctree.out
    endif
 endfunc
@@ -1243,9 +1541,15 @@ set tags=tags;
 
 " YCM自动补全配置--->
 " http://www.cnblogs.com/zhongcq/p/3630047.html
-set completeopt=longest,menu	"让Vim的补全菜单行为与一般IDE一致(参考VimTip1228)
+" YouCompleteMe 配置
+let g:go_def_mode = 'gopls'
+let g:go_info_mode = 'gopls'
+"let g:go_def_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
+"let g:go_info_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
+" 开启YouCompleteMe 日志模式
+" let g:ycm_log_level = 'debug'
 let g:ycm_server_use_vim_stdout = 1
-let g:ycm_server_log_level = 'debug' 
+let g:ycm_server_log_level = 'debug'
 autocmd InsertLeave * if pumvisible() == 0|pclose|endif	"离开插入模式后自动关闭预览窗口
 inoremap <expr> <CR>       pumvisible() ? "\<C-y>" : "\<CR>"	"回车即选中当前项
 "上下左右键的行为 会显示其他信息
@@ -1261,7 +1565,7 @@ inoremap <expr> <PageUp>   pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<PageUp>"
 let g:ycm_key_list_select_completion = ['<c-n>', '<Down>']
 let g:ycm_key_list_previous_completion = ['<c-p>', '<Up>']
 
-let g:ycm_confirm_extra_conf=0 "关闭加载.ycm_extra_conf.py提示
+let g:ycm_confirm_extra_conf=1 "关闭加载.ycm_extra_conf.py提示
 
 let g:ycm_collect_identifiers_from_tags_files=1	" 开启 YCM 基于标签引擎
 let g:ycm_min_num_of_chars_for_completion=2	" 从第2个键入字符就开始罗列匹配项
@@ -1287,26 +1591,6 @@ nmap <F4> :YcmDiags<CR>
 " YCM自动补全配置--->
 
 
-" YCM搭档1: syntastic相关-->
-"http://www.cnblogs.com/zhongcq/p/3642794.html#toc_1.22
-" 多语言的实时语法检查插件,使用pyflakes,速度比pylint快
-let g:syntastic_error_symbol = '✗'	"set error or warning signs
-let g:syntastic_warning_symbol = '⚠'
-let g:syntastic_check_on_open=1
-let g:syntastic_enable_highlighting = 0
-"let g:syntastic_python_checker="flake8,pyflakes,pep8,pylint"
-"let g:syntastic_python_checkers=['pyflakes']
-let g:syntastic_python_checkers=['flake8', 'python3']
-highlight SyntasticErrorSign guifg=white guibg=black
-
-let g:syntastic_cpp_include_dirs = ['/usr/include/']
-let g:syntastic_cpp_remove_include_errors = 1
-let g:syntastic_cpp_check_header = 1
-let g:syntastic_cpp_compiler = 'clang++'
-let g:syntastic_cpp_compiler_options = '-std=c++11 -stdlib=libstdc++'
-let g:syntastic_enable_balloons = 1	"whether to show balloons
-" <--syntastic相关
-
 "YCM搭档2: 快速插入代码片段插件ultisnips-->
 ""定义存放代码片段的文件夹 .vim/snippets下，使用自定义和默认的，将会的到全局，有冲突的会提示
 ""let g:UltiSnipsSnippetDirectories=["bundle/vim-snippets/UltiSnips/"]
@@ -1325,7 +1609,7 @@ let g:UltiSnipsJumpForwardTrigger="II"
 let g:UltiSnipsJumpBackwardTrigger="OO"
 "<--ultisnips
 
-"doxygen toolkit 
+"doxygen toolkit
 let g:DoxygenToolkit_briefTag_pre="@synopsis  "
 let g:DoxygenToolkit_paramTag_pre="@param "
 let g:DoxygenToolkit_returnTag="@returns   "
@@ -1351,18 +1635,20 @@ let g:multi_cursor_skip_key='<C-x>'
 let g:multi_cursor_quit_key='<Esc>'
 
 "Path for gf
-set path=.,/usr/local/include/c++/4.8.3/,/usr/include
+set path=.,/Library/Developer/CommandLineTools/usr/include/c++/v1,/usr/include
+" c++ 20
+"set path=.,/Library/Developer/CommandLineTools/usr/lib/clang/11.0.3/include
 
 
-"python with virtualenv support
-py3 << EOF
-import os
-import sys
-if 'VIRTUAL_ENV' in os.environ:
-  project_base_dir = os.environ['VIRTUAL_ENV']
-  activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
-  execfile(activate_this, dict(__file__=activate_this))
-EOF
+""python with virtualenv support
+"py3 << EOF
+"import os
+"import sys
+"if 'VIRTUAL_ENV' in os.environ:
+  "project_base_dir = os.environ['VIRTUAL_ENV']
+  "activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
+  "execfile(activate_this, dict(__file__=activate_this))
+"EOF
 
 "ignore some filetypes in NERDTree
 let NERDTreeIgnore=['\.o$', '\.pyc$', '\~$']
@@ -1456,10 +1742,10 @@ let g:vdebug_options= {
     \}
 "<---------------------<--vdebug---
 
-let g:ycm_semantic_triggers = {
-    \   'css': [ 're!^\s{4}', 're!:\s+'],
-    \   'html': [ '</' ],
-    \ }
+"let g:ycm_semantic_triggers = {
+    "\   'css': [ 're!^\s{4}', 're!:\s+'],
+    "\   'html': [ '</' ],
+    "\ }
 
 " fold method for HTML
 au BufNewFile,BufRead *.xml,*.htm,*.html so ~/.vim/bundle/XML-Folding/plugin/XMLFolding.vim
@@ -1493,29 +1779,101 @@ function! AdjustWindowHeight(minheight, maxheight)
     endw
     exe max([min([n_lines, a:maxheight]), a:minheight]) . "wincmd _"
 endfunction
-let g:go_bin_path="/Users/mac/code/go/bin/"
+"let g:go_bin_path="/usr/local/go/bin/go""
 
-" YouCompleteMe 配置
-let g:ycm_server_python_interpreter='/usr/local/bin/python3.7'
-" Note that you can install YCM with both libclang and clangd enabled. In that case clangd will be preferred unless you have the following in your vimrc:
-"let g:ycm_use_clangd = 0
-" 寻找全局配置文件
-let g:ycm_global_ycm_extra_conf = "~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py"
-let g:ycm_language_server =
-  \ [
-  \   {
-  \     'name': 'gopls',
-  \     'cmdline': [ '~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls' , "-rpc.trace" ],
-  \     'filetypes': [ 'go' ],
-  \     "project_root_files": [ "go.mod" ]
-  \   }
-  \ ]
 
-let g:go_def_mode = 'gopls'
-let g:go_info_mode = 'gopls'
-"let g:go_def_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
-"let g:go_info_mode='~/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/go/src/golang.org/x/tools/cmd/gopls/gopls'
-" 开启YouCompleteMe 日志模式
-" let g:ycm_log_level = 'debug'
-set completeopt=longest,menu
+"command-t
+"<Leader>b浏览Buffer
+let g:CommandTPreferredImplementation='lua'
+"let g:CommandTPreferredImplementation='ruby'
+nmap <Leader>c <Plug>(CommandT)
+nmap <Leader>b <Plug>(CommandTBuffer)
+"<Leader>f显示MRU文件
+nmap <Leader>f <Plug>(CommandTMRU)
+"搜索结果最大匹配数
+let g:CommandTMaxHeight = 15
+"搜索结果不区分大小写
+let g:CommandTIgnoreCase = 1
+"搜索结果不按反向排序，即最匹配的位于最顶部
+let g:CommandTMatchWindowReverse = 0
+"开启wildignore
+let g:CommandTWildIgnore=&wildignore
+let g:CommandTSmartCase = 1
+
+"ale语法检查
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+
+set foldlevelstart=20
+
+let g:ale_exclude_highlights = ['line-too-long', 'line too long', 'Line too long', 'E501']
+let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+let g:ale_sign_column_always = 1
+let g:ale_set_highlights = 0
+let g:ale_sign_error = 'x'
+let g:ale_sign_warning = '⚠'
+let g:ale_lint_on_text_changed = 'never'
+let g:ale_lint_on_enter = 0
+let g:ale_linters = {
+\   'c++': ['clang'],
+\   'c': ['clang'],
+\   'python': ['ruff'],
+\}
 "<---Self
+"Replace by ale
+"Bundle 'scrooloose/syntastic'
+
+
+"" YCM搭档1: syntastic相关-->
+""http://www.cnblogs.com/zhongcq/p/3642794.html#toc_1.22
+"" 多语言的实时语法检查插件,使用pyflakes,速度比pylint快
+let g:syntastic_error_symbol = '✗'	"set error or warning signs
+let g:syntastic_warning_symbol = '⚠'
+let g:syntastic_check_on_open=1
+let g:syntastic_enable_highlighting = 0
+"let g:syntastic_python_checker="flake8,pyflakes,pep8,pylint"
+"let g:syntastic_python_checkers=['pyflakes']
+"let g:syntastic_python_checkers=['flake8', 'python3']
+let g:syntastic_python_checkers=['ruff']
+let g:syntastic_python_checker_args="--ignore=E501,W601"
+let g:ale_exclude_highlights = ['line-too-long', 'line too long', 'Line too long', 'E501']
+let g:syntastic_python_flake8_post_args='--ignore=E501,E128,E225'
+let g:syntastic_python_flake8_args = '--ignore=E501,E302,E261,E262,E701,E241,E126,E127,E128,W801'
+highlight SyntasticErrorSign guifg=white guibg=black
+
+"let g:syntastic_cpp_include_dirs = ['/usr/include/']
+"let g:syntastic_cpp_remove_include_errors = 1
+"let g:syntastic_cpp_check_header = 1
+"let g:syntastic_cpp_compiler = 'clang++'
+"let g:syntastic_cpp_compiler_options = '-std=c++11 -stdlib=libstdc++'
+"let g:syntastic_enable_balloons = 1	"whether to show balloons
+"" <--syntastic相关
+
+let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+\ }
+
+let g:flake8_cmd='/usr/local/python3/bin/flake8'
